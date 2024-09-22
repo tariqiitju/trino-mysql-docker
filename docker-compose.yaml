@@ -1,0 +1,37 @@
+services:
+  mysql:
+    image: mysql:5.7.44
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: credit
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-data/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - trino-net
+    command: >
+      --default-authentication-plugin=mysql_native_password
+
+  trino:
+    container_name: trino
+    image: trinodb/trino
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./credit.properties:/etc/trino/catalog/credit.properties
+      - ./trino/etc:/usr/lib/trino/etc:ro
+    networks:
+      - trino-net
+    depends_on:
+      - mysql
+
+volumes:
+  mysql-data:
+networks:
+  trino-net:
+    driver: bridge
